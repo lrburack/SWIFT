@@ -23,6 +23,7 @@
 /* Local includes. */
 #include "../EAGLE/enrichment.h"
 #include "../EAGLE/yield_tables.h"
+#include "exp10.h"
 #include "hydro_properties.h"
 #include "inline.h"
 #include "random.h"

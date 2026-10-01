@@ -19,6 +19,8 @@
 #ifndef SWIFT_GEAR_INTERPOLATION_H
 #define SWIFT_GEAR_INTERPOLATION_H
 
+#include "exp10.h"
+
 /**
  * @brief Type of boundary condition available.
  */

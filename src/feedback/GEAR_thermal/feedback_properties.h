@@ -22,6 +22,7 @@
 #include "../GEAR/stellar_evolution.h"
 #include "../GEAR/stellar_evolution_struct.h"
 #include "chemistry.h"
+#include "exp10.h"
 #include "hydro_properties.h"
 
 /**

@@ -20,6 +20,7 @@
 /* Include Header*/
 #include "stellar_wind.h"
 
+#include "exp10.h"
 #include "interpolation.h"
 
 #include <math.h>

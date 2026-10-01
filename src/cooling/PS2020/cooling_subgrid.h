@@ -25,6 +25,7 @@
 /* Local includes. */
 #include "cooling.h"
 #include "equation_of_state.h"
+#include "exp10.h"
 
 /**
  * @brief Computes the gas pressure at thermal equilibrium (cooling = heating)

@@ -3,6 +3,8 @@
  * for the cooling.
  */
 
+#include "exp10.h"
+
 /**
  * @brief Computes the log_10 of the temperature corresponding to a given
  * internal energy, hydrogen number density, Helium fraction and redshift.

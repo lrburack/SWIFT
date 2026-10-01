@@ -28,6 +28,7 @@
 #include "engine.h"
 #include "runner.h"
 #include "sink.h"
+#include "sink_properties.h"
 #include "space_getsid.h"
 #include "timers.h"
 
@@ -55,8 +56,12 @@ static INLINE void runner_iact_hydro_sink_aperture_prep_sink_formation_sink(
     const struct cosmology *cosmo, const struct sink_props *sink_props,
     const float r_acc_p) {
 
-  /* No overlap test is needed if sink formation is disabled. */
+  /* No overlap test is needed if sink formation is disabled. can_form_sink
+   * only exists for the GEAR sink model, which is the only one that can
+   * ever reach this loop (see sink_formation_gas_loop_is_active()). */
+#ifdef SINK_GEAR
   if (!pi->sink_data.can_form_sink) return;
+#endif
 
   /* Box size, or 0 if the box is not periodic */
   const struct space *s = e->s;
@@ -125,7 +130,7 @@ void runner_doself1_hydro_sink_aperture_prep_sink_formation_sink(
     struct xpart *restrict xpi = &xparts[pid];
 
     const float r_acc_p =
-        (sink_props->use_fixed_r_cut ? sink_props->cut_off_radius
+        (sink_props->use_fixed_r_cut ? sink_formation_gas_loop_r_cut(sink_props)
                                      : kernel_gamma * pi->h) *
         cosmo->a;
 
@@ -169,7 +174,7 @@ static void do_nonsym_pair1_hydro_sink_aperture_prep_sink_formation_sink(
     struct xpart *restrict xpi = &xparts[pid];
 
     const float r_acc_p =
-        (sink_props->use_fixed_r_cut ? sink_props->cut_off_radius
+        (sink_props->use_fixed_r_cut ? sink_formation_gas_loop_r_cut(sink_props)
                                      : kernel_gamma * pi->h) *
         cosmo->a;
 

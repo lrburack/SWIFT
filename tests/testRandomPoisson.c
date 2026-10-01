@@ -25,6 +25,7 @@
 
 /* Local headers. */
 #include "swift.h"
+#include "exp10.h"
 
 const int N = 1000000;
 
