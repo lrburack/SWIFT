@@ -34,6 +34,7 @@
 #include "multipole.h"
 #include "neutrino.h"
 #include "part_init.h"
+#include "turbulent_driving.h"
 
 #ifdef WITH_LIGHTCONE
 /**
@@ -268,6 +269,10 @@ void cell_drift_part(struct cell *c, const struct engine *e, int force,
        * (Note: Only used in schemes that have a delayed feedback mechanism
        * otherwise just an empty function) */
       feedback_update_part(p, xp, e);
+
+      /* Apply any turbulent driving energy accumulated from a triggering
+       * neighbour since the last time this particle was drifted. */
+      turbulent_driving_update_part(p, xp, e);
 
       /* Drift... */
       drift_part(p, xp, dt_drift, dt_kick_hydro, dt_kick_grav, dt_therm,

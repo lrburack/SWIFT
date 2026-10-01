@@ -150,6 +150,21 @@ void runner_do_bh_swallow_pair(struct runner *r, struct cell *ci,
                                struct cell *cj, int timer);
 void runner_do_star_formation(struct runner *r, struct cell *c, int timer);
 void runner_do_star_formation_sink(struct runner *r, struct cell *c, int timer);
+void runner_do_turbulent_driving_trigger(struct runner *r, struct cell *c,
+                                         int timer);
+void runner_do_turbulent_driving_ghost(struct runner *r, struct cell *c,
+                                       int timer);
+void runner_do_turbulent_driving_apply_ghost(struct runner *r, struct cell *c,
+                                             int timer);
+void runner_doself_turbulent_driving_density(struct runner *r,
+                                             struct cell *c, int timer);
+void runner_dopair_turbulent_driving_density(struct runner *r,
+                                             struct cell *ci, struct cell *cj,
+                                             int timer);
+void runner_doself_turbulent_driving_apply(struct runner *r, struct cell *c,
+                                           int timer);
+void runner_dopair_turbulent_driving_apply(struct runner *r, struct cell *ci,
+                                           struct cell *cj, int timer);
 void runner_do_sink_formation(struct runner *r, struct cell *c);
 void runner_do_prepare_part_sink_formation(struct runner *r, struct cell *c,
                                            struct part *restrict p,

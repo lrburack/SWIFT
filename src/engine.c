@@ -99,6 +99,7 @@
 #include "sort_part.h"
 #include "star_formation.h"
 #include "star_formation_logger.h"
+#include "turbulent_driving.h"
 #include "stars_io.h"
 #include "statistics.h"
 #include "timers.h"
@@ -137,7 +138,8 @@ const char *engine_policy_names[] = {"none",
                                      "power spectra",
                                      "moving mesh",
                                      "moving mesh hydro",
-                                     "no_io"};
+                                     "no_io",
+                                     "turbulent driving"};
 
 const int engine_default_snapshot_subsample[swift_type_count] = {0};
 
@@ -3562,6 +3564,7 @@ void engine_init(
     const struct neutrino_props *neutrinos,
     struct neutrino_response *neutrino_response,
     struct feedback_props *feedback,
+    const struct turbulent_driving_props *turbulent_driving,
     struct pressure_floor_props *pressure_floor, struct rt_props *rt,
     struct pm_mesh *mesh, struct power_spectrum_data *pow_data,
     const struct external_potential *potential,
@@ -3718,6 +3721,7 @@ void engine_init(
   e->cooling_func = cooling_func;
   e->star_formation = starform;
   e->feedback_props = feedback;
+  e->turbulent_driving_props = turbulent_driving;
   e->pressure_floor_props = pressure_floor;
   e->rt_props = rt;
   e->chemistry = chemistry;
@@ -3878,7 +3882,7 @@ void engine_print_policy(struct engine *e) {
     printf("[0000] %s engine_policy: engine policies are [ ",
            clocks_get_timesincestart());
     for (int k = 0; k < engine_maxpolicy; k++)
-      if (e->policy & (1 << k)) printf(" '%s' ", engine_policy_names[k + 1]);
+      if (e->policy & (1u << k)) printf(" '%s' ", engine_policy_names[k + 1]);
     printf(" ]\n");
     fflush(stdout);
   }
@@ -3886,7 +3890,7 @@ void engine_print_policy(struct engine *e) {
   printf("%s engine_policy: engine policies are [ ",
          clocks_get_timesincestart());
   for (int k = 0; k < engine_maxpolicy; k++)
-    if (e->policy & (1 << k)) printf(" '%s' ", engine_policy_names[k + 1]);
+    if (e->policy & (1u << k)) printf(" '%s' ", engine_policy_names[k + 1]);
   printf(" ]\n");
   fflush(stdout);
 #endif
@@ -4385,6 +4389,15 @@ void engine_struct_restore(struct engine *e, FILE *stream) {
       (struct feedback_props *)malloc(sizeof(struct feedback_props));
   feedback_struct_restore(feedback_properties, stream);
   e->feedback_props = feedback_properties;
+
+  /* Turbulent driving does not support restarts yet: the raw struct restore
+   * above leaves a stale pointer from the dumping process in this field, so
+   * explicitly clear it rather than risk a dangling-pointer dereference. */
+  e->turbulent_driving_props = NULL;
+  if (e->policy & engine_policy_turbulent_driving)
+    error(
+        "Restarting a run with turbulent driving enabled is not supported "
+        "yet.");
 
   struct pressure_floor_props *pressure_floor_properties =
       (struct pressure_floor_props *)malloc(

@@ -360,6 +360,10 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_sink_formation_sink)
             runner_dosub_self1_hydro_sink_aperture_prep_sink_formation_sink(
                 r, ci, sink_cut_off_radius, /*gettimer=*/1);
+          else if (t->subtype == task_subtype_turbulent_driving_density)
+            runner_doself_turbulent_driving_density(r, ci, 1);
+          else if (t->subtype == task_subtype_turbulent_driving_apply)
+            runner_doself_turbulent_driving_apply(r, ci, 1);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -443,6 +447,10 @@ void *runner_main(void *data) {
           else if (t->subtype == task_subtype_sink_formation_sink)
             runner_dosub_pair1_hydro_sink_aperture_prep_sink_formation_sink(
                 r, ci, cj, sink_cut_off_radius, /*gettimer=*/1);
+          else if (t->subtype == task_subtype_turbulent_driving_density)
+            runner_dopair_turbulent_driving_density(r, ci, cj, 1);
+          else if (t->subtype == task_subtype_turbulent_driving_apply)
+            runner_dopair_turbulent_driving_apply(r, ci, cj, 1);
           else
             error("Unknown/invalid task subtype (%s/%s).",
                   taskID_names[t->type], subtaskID_names[t->subtype]);
@@ -665,6 +673,15 @@ void *runner_main(void *data) {
           break;
         case task_type_star_formation_sink:
           runner_do_star_formation_sink(r, t->ci, 1);
+          break;
+        case task_type_turbulent_driving_trigger:
+          runner_do_turbulent_driving_trigger(r, t->ci, 1);
+          break;
+        case task_type_turbulent_driving_ghost:
+          runner_do_turbulent_driving_ghost(r, t->ci, 1);
+          break;
+        case task_type_turbulent_driving_apply_ghost:
+          runner_do_turbulent_driving_apply_ghost(r, t->ci, 1);
           break;
         case task_type_stars_resort:
           runner_do_stars_resort(r, t->ci, 1);

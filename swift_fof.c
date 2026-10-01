@@ -662,6 +662,7 @@ int main(int argc, char *argv[]) {
       /*stars_properties=*/NULL, /*black_holes_properties=*/NULL,
       /*sink_properties=*/NULL, &neutrino_properties,
       /*neutrino_response=*/NULL, /*feedback_properties=*/NULL,
+      /*turbulent_driving_props=*/NULL,
       /*pressure_floor_properties=*/NULL,
       /*rt_properties=*/NULL, &mesh, /*pow_data=*/NULL, /*potential=*/NULL,
       /*forcing_terms=*/NULL,

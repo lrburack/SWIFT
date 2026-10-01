@@ -120,6 +120,7 @@ __attribute__((always_inline)) INLINE static integertime_t get_gpart_timestep(
 
   /* Limit timestep within the allowed range */
   new_dt = min(new_dt, e->dt_max);
+  
   if (new_dt < e->dt_min)
     error("gpart (id=%lld) wants a time-step (%e) below dt_min (%e)",
           gp->id_or_neg_offset, new_dt, e->dt_min);

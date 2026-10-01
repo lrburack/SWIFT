@@ -547,7 +547,9 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
                    t->subtype == task_subtype_gradient ||
                    t->subtype == task_subtype_force ||
                    t->subtype == task_subtype_limiter ||
-                   t->subtype == task_subtype_chemistry_fct_prep) {
+                   t->subtype == task_subtype_chemistry_fct_prep ||
+                   t->subtype == task_subtype_turbulent_driving_density ||
+                   t->subtype == task_subtype_turbulent_driving_apply) {
           cost = 1.f * (wscale * count_i) * count_i;
         } else if (t->subtype == task_subtype_rt_gradient) {
           cost = 1.f * wscale * scount_i * count_i;
@@ -650,7 +652,9 @@ void scheduler_reweight(struct scheduler *s, int verbose) {
                    t->subtype == task_subtype_gradient ||
                    t->subtype == task_subtype_force ||
                    t->subtype == task_subtype_limiter ||
-                   t->subtype == task_subtype_chemistry_fct_prep) {
+                   t->subtype == task_subtype_chemistry_fct_prep ||
+                   t->subtype == task_subtype_turbulent_driving_density ||
+                   t->subtype == task_subtype_turbulent_driving_apply) {
           if (t->ci->nodeID != nodeID || t->cj->nodeID != nodeID) {
             cost = 3.f * (wscale * count_i) * count_j * sid_scale[t->flags];
           } else {

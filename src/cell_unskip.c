@@ -1986,6 +1986,18 @@ int cell_unskip_hydro_tasks(struct cell *c, struct scheduler *s) {
       cell_activate_star_formation_tasks(c->top, s, with_feedback);
       cell_activate_super_spart_drifts(c->top, s);
     }
+
+    if (c->top->hydro.turbulent_driving_trigger != NULL) {
+      scheduler_activate(s, c->top->hydro.turbulent_driving_trigger);
+      scheduler_activate(s, c->top->hydro.turbulent_driving_ghost);
+      scheduler_activate(s, c->top->hydro.turbulent_driving_apply_ghost);
+      for (struct link *l = c->top->hydro.turbulent_driving_density;
+           l != NULL; l = l->next)
+        scheduler_activate(s, l->t);
+      for (struct link *l = c->top->hydro.turbulent_driving_apply; l != NULL;
+           l = l->next)
+        scheduler_activate(s, l->t);
+    }
   }
   /* Additionally unskip force interactions between inactive local cell and
    * active remote cell. (The cell unskip will only be called for active cells,

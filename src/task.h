@@ -82,6 +82,9 @@ enum task_types {
   task_type_star_formation_in,  /* Implicit */
   task_type_star_formation_out, /* Implicit */
   task_type_star_formation_sink,
+  task_type_turbulent_driving_trigger,
+  task_type_turbulent_driving_ghost,
+  task_type_turbulent_driving_apply_ghost,
   task_type_csds,
   task_type_stars_in,       /* Implicit */
   task_type_stars_out,      /* Implicit */
@@ -162,6 +165,8 @@ enum task_subtypes {
   task_subtype_stars_prep3,
   task_subtype_stars_prep4,
   task_subtype_stars_feedback,
+  task_subtype_turbulent_driving_density,
+  task_subtype_turbulent_driving_apply,
   task_subtype_sf_counts,
   task_subtype_grav_counts,
   task_subtype_bpart_rho,

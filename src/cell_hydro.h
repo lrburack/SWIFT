@@ -110,6 +110,26 @@ struct cell_hydro {
     /*! Task for sorting the stars again after a SF event */
     struct task *stars_resort;
 
+    /*! Task deciding which gas particles trigger a turbulent driving
+     *  injection event this step. */
+    struct task *turbulent_driving_trigger;
+
+    /*! Linked list of the self/pair tasks counting turbulent driving
+     *  neighbours for this cell. */
+    struct link *turbulent_driving_density;
+
+    /*! Task finalising the per-particle energy share once the neighbour
+     *  count is known, between the density and apply loops. */
+    struct task *turbulent_driving_ghost;
+
+    /*! Linked list of the self/pair tasks depositing turbulent driving
+     *  energy onto this cell's neighbours. */
+    struct link *turbulent_driving_apply;
+
+    /*! Task applying the accumulated turbulent driving energy to each
+     *  particle's internal energy. */
+    struct task *turbulent_driving_apply_ghost;
+
     /*! Last (integer) time the cell's part were drifted forward in time. */
     integertime_t ti_old_part;
 
