@@ -1403,6 +1403,14 @@ AC_DEFINE_UNQUOTED([SWIFT_RANDOM_SEED_XOR], [$with_random_seed],[Value of the ra
 
 # Check for HDF5. This is required.
 AX_LIB_HDF5
+
+# Homebrew's HDF5 (CMake-built) emits a CMake-style, semicolon-separated
+# library list from `h5cc -show` (e.g. "-lm;-ldl;-lz;-lsz;-laec"). Autoconf
+# substitutes this verbatim, and since ';' is a shell command separator,
+# it breaks the link line in the generated Makefiles. Sanitize it here.
+HDF5_LIBS=`echo "$HDF5_LIBS" | sed 's/;/ /g'`
+HDF5_LDFLAGS=`echo "$HDF5_LDFLAGS" | sed 's/;/ /g'`
+
 if test "$with_hdf5" != "yes"; then
     AC_MSG_ERROR([Could not find a working HDF5 library])
 fi
