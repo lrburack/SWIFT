@@ -92,8 +92,17 @@ enum engine_policy {
   engine_policy_grid = (1 << 28),
   engine_policy_grid_hydro = (1 << 29),
   engine_policy_no_io = (1 << 30),
+
+  /* This is the very last bit available in the (32-bit) policy field: an
+   * unsigned shift is used to avoid undefined behaviour in the shift
+   * itself; storing the result in the `int policy` field afterwards is an
+   * implementation-defined (not undefined) conversion that is safe on
+   * every compiler SWIFT supports (two's complement, bitwise ops operate
+   * on the representation). There is no room for any further policy after
+   * this one without widening `policy` to a 64-bit type. */
+  engine_policy_turbulent_driving = (1u << 31),
 };
-#define engine_maxpolicy 31
+#define engine_maxpolicy 32
 extern const char *engine_policy_names[engine_maxpolicy + 1];
 
 /**
@@ -562,6 +571,9 @@ struct engine {
   /* Properties of the sellar feedback model */
   struct feedback_props *feedback_props;
 
+  /* Properties of the turbulent driving model */
+  const struct turbulent_driving_props *turbulent_driving_props;
+
   /* Properties of the pressure floor scheme */
   struct pressure_floor_props *pressure_floor_props;
 
@@ -738,6 +750,7 @@ void engine_init(
     const struct neutrino_props *neutrinos,
     struct neutrino_response *neutrino_response,
     struct feedback_props *feedback,
+    const struct turbulent_driving_props *turbulent_driving,
     struct pressure_floor_props *pressure_floor, struct rt_props *rt,
     struct pm_mesh *mesh, struct power_spectrum_data *pow_data,
     const struct external_potential *potential,

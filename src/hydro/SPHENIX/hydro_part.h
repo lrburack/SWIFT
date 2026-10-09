@@ -42,6 +42,7 @@
 #include "star_formation_struct.h"
 #include "timestep_limiter_struct.h"
 #include "tracers_struct.h"
+#include "turbulent_driving_struct.h"
 
 /**
  * @brief Particle fields not needed during the SPH loops over neighbours.
@@ -81,6 +82,9 @@ struct xpart {
 
   /* Additional data used by the feedback */
   struct feedback_xpart_data feedback_data;
+
+  /* Additional data used by the turbulent driving module */
+  struct turbulent_driving_xpart_data turbulent_driving_data;
 
   /*! Additional data used by the MHD scheme */
   struct mhd_xpart_data mhd_data;

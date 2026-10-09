@@ -100,6 +100,8 @@
 #include "timeline.h"
 #include "timers.h"
 #include "tools.h"
+#include "turbulent_driving.h"
+#include "turbulent_driving_iact.h"
 #include "units.h"
 #include "velociraptor_interface.h"
 #include "version.h"

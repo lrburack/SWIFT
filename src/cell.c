@@ -708,6 +708,8 @@ void cell_clean_links(struct cell *c, void *data) {
   c->hydro.gradient = NULL;
   c->hydro.force = NULL;
   c->hydro.limiter = NULL;
+  c->hydro.turbulent_driving_density = NULL;
+  c->hydro.turbulent_driving_apply = NULL;
   c->rt.rt_gradient = NULL;
   c->rt.rt_transport = NULL;
   c->grav.grav = NULL;

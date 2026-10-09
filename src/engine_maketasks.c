@@ -1381,6 +1381,8 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
   const int with_stars = (e->policy & engine_policy_stars);
   const int with_star_formation = (e->policy & engine_policy_star_formation);
   const int with_star_formation_sink = with_sinks && with_stars;
+  const int with_turbulent_driving =
+      (e->policy & engine_policy_turbulent_driving);
   const int with_timestep_limiter =
       (e->policy & engine_policy_timestep_limiter);
   const int with_timestep_sync = (e->policy & engine_policy_timestep_sync);
@@ -1401,6 +1403,33 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
     if (with_star_formation && c->hydro.count > 0) {
       c->hydro.star_formation = scheduler_addtask(
           s, task_type_star_formation, task_subtype_none, 0, 0, c, NULL);
+    }
+
+    if (with_turbulent_driving && c->hydro.count > 0) {
+      c->hydro.turbulent_driving_trigger =
+          scheduler_addtask(s, task_type_turbulent_driving_trigger,
+                            task_subtype_none, 0, 0, c, NULL);
+      c->hydro.turbulent_driving_ghost =
+          scheduler_addtask(s, task_type_turbulent_driving_ghost,
+                            task_subtype_none, 0, 0, c, NULL);
+      c->hydro.turbulent_driving_apply_ghost =
+          scheduler_addtask(s, task_type_turbulent_driving_apply_ghost,
+                            task_subtype_none, 0, 0, c, NULL);
+
+      /* Wire the pipeline: trigger -> density(self+pair) -> ghost ->
+       * apply(self+pair) -> apply_ghost. The density/apply link lists were
+       * populated by engine_make_turbulent_driving_tasks_mapper(), which
+       * runs before this function. */
+      for (struct link *l = c->hydro.turbulent_driving_density; l != NULL;
+           l = l->next) {
+        scheduler_addunlock(s, c->hydro.turbulent_driving_trigger, l->t);
+        scheduler_addunlock(s, l->t, c->hydro.turbulent_driving_ghost);
+      }
+      for (struct link *l = c->hydro.turbulent_driving_apply; l != NULL;
+           l = l->next) {
+        scheduler_addunlock(s, c->hydro.turbulent_driving_ghost, l->t);
+        scheduler_addunlock(s, l->t, c->hydro.turbulent_driving_apply_ghost);
+      }
     }
 
     if (with_star_formation_sink &&
@@ -1473,6 +1502,14 @@ void engine_make_hierarchical_tasks_common(struct engine *e, struct cell *c) {
       if (with_star_formation && c->hydro.count > 0) {
         scheduler_addunlock(s, kick2_or_csds, c->top->hydro.star_formation);
         scheduler_addunlock(s, c->top->hydro.star_formation, c->timestep);
+      }
+
+      /* Subgrid tasks: turbulent driving */
+      if (with_turbulent_driving && c->hydro.count > 0) {
+        scheduler_addunlock(s, kick2_or_csds,
+                            c->top->hydro.turbulent_driving_trigger);
+        scheduler_addunlock(s, c->top->hydro.turbulent_driving_apply_ghost,
+                            c->timestep);
       }
 
       /* Subgrid tasks: star formation from sinks */
@@ -3699,6 +3736,98 @@ void engine_make_hydroloop_tasks_mapper(void *map_data, int num_elements,
   }
 }
 
+/**
+ * @brief Create the self/pair gas-gas neighbour tasks for the turbulent
+ * driving module (density-count and energy-apply loops).
+ *
+ * Deliberately simpler than engine_make_hydroloop_tasks_mapper(): tasks are
+ * only created between top-level cells (never split further by the
+ * scheduler -- scheduler_splittasks_mapper() only knows how to split
+ * task_subtype_density/grav/external_grav tasks, so ours must never be
+ * visible to it). Any recursion into sub-cells needed for large top-level
+ * cells is instead done at runtime, inside
+ * runner_do{self,pair}_turbulent_driving_{density,apply}(). This is why
+ * this function is called *after* scheduler_splittasks() in
+ * engine_maketasks(), unlike the hydro/gravity task mappers.
+ *
+ * @param map_data The list of cell indices to iterate on.
+ * @param num_elements The number of cells to iterate on.
+ * @param extra_data The #engine.
+ */
+void engine_make_turbulent_driving_tasks_mapper(void *map_data,
+                                                int num_elements,
+                                                void *extra_data) {
+
+  struct engine *e = (struct engine *)extra_data;
+  const int periodic = e->s->periodic;
+
+  struct space *s = e->s;
+  struct scheduler *sched = &e->sched;
+  const int nodeID = e->nodeID;
+  const int *cdim = s->cdim;
+  struct cell *cells = s->cells_top;
+
+  for (int ind = 0; ind < num_elements; ind++) {
+
+    const int cid = (size_t)(map_data) + ind;
+
+    const int i = cid / (cdim[1] * cdim[2]);
+    const int j = (cid / cdim[2]) % cdim[1];
+    const int k = cid % cdim[2];
+
+    struct cell *ci = &cells[cid];
+
+    if (ci->hydro.count == 0) continue;
+
+    /* Self-interaction. */
+    if (ci->nodeID == nodeID) {
+      struct task *t_density = scheduler_addtask(
+          sched, task_type_self, task_subtype_turbulent_driving_density, 0, 0,
+          ci, NULL);
+      struct task *t_apply = scheduler_addtask(
+          sched, task_type_self, task_subtype_turbulent_driving_apply, 0, 0,
+          ci, NULL);
+      engine_addlink(e, &ci->hydro.turbulent_driving_density, t_density);
+      engine_addlink(e, &ci->hydro.turbulent_driving_apply, t_apply);
+    }
+
+    /* Pair interactions with the 26 neighbouring top-level cells. */
+    for (int ii = -1; ii < 2; ii++) {
+      int iii = i + ii;
+      if (!periodic && (iii < 0 || iii >= cdim[0])) continue;
+      iii = (iii + cdim[0]) % cdim[0];
+      for (int jj = -1; jj < 2; jj++) {
+        int jjj = j + jj;
+        if (!periodic && (jjj < 0 || jjj >= cdim[1])) continue;
+        jjj = (jjj + cdim[1]) % cdim[1];
+        for (int kk = -1; kk < 2; kk++) {
+          int kkk = k + kk;
+          if (!periodic && (kkk < 0 || kkk >= cdim[2])) continue;
+          kkk = (kkk + cdim[2]) % cdim[2];
+
+          const int cjd = cell_getid(cdim, iii, jjj, kkk);
+          struct cell *cj = &cells[cjd];
+
+          if ((cid >= cjd) || (cj->hydro.count == 0) ||
+              (ci->nodeID != nodeID && cj->nodeID != nodeID))
+            continue;
+
+          struct task *t_density = scheduler_addtask(
+              sched, task_type_pair, task_subtype_turbulent_driving_density,
+              0, 0, ci, cj);
+          struct task *t_apply = scheduler_addtask(
+              sched, task_type_pair, task_subtype_turbulent_driving_apply, 0,
+              0, ci, cj);
+          engine_addlink(e, &ci->hydro.turbulent_driving_density, t_density);
+          engine_addlink(e, &cj->hydro.turbulent_driving_density, t_density);
+          engine_addlink(e, &ci->hydro.turbulent_driving_apply, t_apply);
+          engine_addlink(e, &cj->hydro.turbulent_driving_apply, t_apply);
+        }
+      }
+    }
+  }
+}
+
 struct cell_type_pair {
   struct cell *ci, *cj;
   int type;
@@ -4207,6 +4336,26 @@ void engine_maketasks(struct engine *e) {
   if (e->verbose)
     message("Setting super-pointers took %.3f %s.",
             clocks_from_ticks(getticks() - tic2), clocks_getunit());
+
+  /* Create the turbulent driving neighbour tasks. This must happen after
+   * scheduler_splittasks(): unlike the hydro/gravity self/pair tasks, these
+   * are never split further by the scheduler (see the comment on
+   * engine_make_turbulent_driving_tasks_mapper()), so they must not be
+   * visible to scheduler_splittasks_mapper(), which only knows how to
+   * split task_subtype_density/grav/external_grav tasks.
+   *
+   * It must also happen after the cell-task link array has been freed and
+   * reallocated above: unlike the hydro density/force links (which are
+   * rebuilt into the fresh array by engine_count_and_link_tasks_mapper()),
+   * the turbulent_driving_density/apply link lists this mapper builds via
+   * engine_addlink() are never rebuilt afterwards, so if it ran any
+   * earlier (e.g. right after scheduler_splittasks(), before the realloc)
+   * those lists would immediately dangle once the old array is freed,
+   * corrupting the link table when engine_make_hierarchical_tasks_common()
+   * walks them below. */
+  if (e->policy & engine_policy_turbulent_driving)
+    threadpool_map(&e->threadpool, engine_make_turbulent_driving_tasks_mapper,
+                   NULL, s->nr_cells, 1, threadpool_auto_chunk_size, e);
 
   /* Append hierarchical tasks to each cell. */
   threadpool_map(&e->threadpool, engine_make_hierarchical_tasks_mapper, cells,

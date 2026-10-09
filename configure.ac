@@ -3230,6 +3230,27 @@ case "$with_star_formation" in
    ;;
 esac
 
+#  Turbulent driving
+AC_ARG_WITH([turbulent-driving],
+    [AS_HELP_STRING([--with-turbulent-driving=<td>],
+       [turbulent driving @<:@none, default, default: none@:>@]
+    )],
+    [with_turbulent_driving="$withval"],
+    [with_turbulent_driving="none"]
+)
+
+case "$with_turbulent_driving" in
+   none)
+      AC_DEFINE([TURBULENT_DRIVING_NONE], [1], [No turbulent driving])
+   ;;
+   default)
+      AC_DEFINE([TURBULENT_DRIVING_DEFAULT], [1], [Stochastic SN-mimicking turbulent driving model])
+   ;;
+   *)
+      AC_MSG_ERROR([Unknown turbulent driving model])
+   ;;
+esac
+
 AC_ARG_WITH([gadget2-physical-constants],
     [AS_HELP_STRING([--with-gadget2-physical-constants],
        [Use the same physical constants (G, Msun, Mpc) as the Gadget-2 code rather than more up-to-date values.]

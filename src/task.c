@@ -89,6 +89,9 @@ const char *taskID_names[task_type_count] = {
     "star_formation_in",
     "star_formation_out",
     "star_formation_sink",
+    "turbulent_driving_trigger",
+    "turbulent_driving_ghost",
+    "turbulent_driving_apply_ghost",
     "csds",
     "stars_in",
     "stars_out",
@@ -151,6 +154,8 @@ const char *subtaskID_names[task_subtype_count] = {
     "stars_prep1",
     "stars_prep2",
     "stars_feedback",
+    "turbulent_driving_density",
+    "turbulent_driving_apply",
     "sf_counts",
     "grav_counts",
     "bpart_rho",
@@ -233,6 +238,9 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
     case task_type_extra_ghost:
     case task_type_cooling:
     case task_type_end_hydro_force:
+    case task_type_turbulent_driving_trigger:
+    case task_type_turbulent_driving_ghost:
+    case task_type_turbulent_driving_apply_ghost:
       return task_action_part;
       break;
 
@@ -274,6 +282,8 @@ __attribute__((always_inline)) INLINE static enum task_actions task_acts_on(
         case task_subtype_gradient:
         case task_subtype_force:
         case task_subtype_limiter:
+        case task_subtype_turbulent_driving_density:
+        case task_subtype_turbulent_driving_apply:
           return task_action_part;
           break;
 
@@ -1677,6 +1687,11 @@ enum task_categories task_get_category(const struct task *t) {
     case task_type_star_formation_sink:
       return task_category_star_formation;
 
+    case task_type_turbulent_driving_trigger:
+    case task_type_turbulent_driving_ghost:
+    case task_type_turbulent_driving_apply_ghost:
+      return task_category_feedback;
+
     case task_type_sink_density_ghost:
     case task_type_sink_formation:
       return task_category_sink;
@@ -1776,6 +1791,8 @@ enum task_categories task_get_category(const struct task *t) {
         case task_subtype_stars_prep1:
         case task_subtype_stars_prep2:
         case task_subtype_stars_feedback:
+        case task_subtype_turbulent_driving_density:
+        case task_subtype_turbulent_driving_apply:
           return task_category_feedback;
 
         case task_subtype_bh_density:

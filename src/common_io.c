@@ -849,7 +849,7 @@ void io_write_engine_policy(hid_t h_file, const struct engine *e) {
   if (h_grp < 0) error("Error while creating policy group");
 
   for (int i = 0; i < engine_maxpolicy; ++i)
-    if (e->policy & (1 << i))
+    if (e->policy & (1u << i))
       io_write_attribute_i(h_grp, engine_policy_names[i + 1], 1);
     else
       io_write_attribute_i(h_grp, engine_policy_names[i + 1], 0);

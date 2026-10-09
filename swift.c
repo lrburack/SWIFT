@@ -97,6 +97,7 @@ int main(int argc, char *argv[]) {
   struct forcing_terms forcing_terms;
   struct extra_io_properties extra_io_props;
   struct star_formation starform;
+  struct turbulent_driving_props turbulent_driving_properties;
   struct pm_mesh mesh;
   struct power_spectrum_data pow_data;
   struct gpart *gparts = NULL;
@@ -196,6 +197,7 @@ int main(int argc, char *argv[]) {
   int with_lightcone = 0;
   int with_star_formation = 0;
   int with_feedback = 0;
+  int with_turbulent_driving = 0;
   int with_black_holes = 0;
   int with_timestep_limiter = 0;
   int with_timestep_sync = 0;
@@ -249,6 +251,10 @@ int main(int argc, char *argv[]) {
                   NULL, 0, 0),
       OPT_BOOLEAN('F', "star-formation", &with_star_formation,
                   "Run with star formation.", NULL, 0, 0),
+      OPT_BOOLEAN(0, "turbulent-driving", &with_turbulent_driving,
+                  "Run with turbulent driving (stochastic SN-mimicking "
+                  "thermal energy injection).",
+                  NULL, 0, 0),
       OPT_BOOLEAN('g', "external-gravity", &with_external_gravity,
                   "Run with an external gravitational potential.", NULL, 0, 0),
       OPT_BOOLEAN('G', "self-gravity", &with_self_gravity,
@@ -1240,6 +1246,18 @@ int main(int argc, char *argv[]) {
     }
     if (with_star_formation && myrank == 0) starformation_print(&starform);
 
+    /* Initialise the turbulent driving model and its properties */
+    bzero(&turbulent_driving_properties, sizeof(struct turbulent_driving_props));
+    if (with_turbulent_driving) {
+#ifdef TURBULENT_DRIVING_NONE
+      error("ERROR: Running with turbulent driving but compiled without it!");
+#endif
+      turbulent_driving_init(params, &prog_const, &us,
+                             &turbulent_driving_properties);
+    }
+    if (with_turbulent_driving && myrank == 0)
+      turbulent_driving_print(&turbulent_driving_properties);
+
     /* Initialise the chemistry */
     bzero(&chemistry, sizeof(struct chemistry_global_data));
     chemistry_init(params, &us, &prog_const, &chemistry);
@@ -1581,6 +1599,8 @@ int main(int argc, char *argv[]) {
     if (with_cooling) engine_policies |= engine_policy_cooling;
     if (with_stars) engine_policies |= engine_policy_stars;
     if (with_star_formation) engine_policies |= engine_policy_star_formation;
+    if (with_turbulent_driving)
+      engine_policies |= engine_policy_turbulent_driving;
     if (with_feedback) engine_policies |= engine_policy_feedback;
     if (with_black_holes) engine_policies |= engine_policy_black_holes;
     if (with_structure_finding)
@@ -1602,7 +1622,8 @@ int main(int argc, char *argv[]) {
                 &prog_const, &cosmo, &hydro_properties, &entropy_floor,
                 &gravity_properties, &stars_properties, &black_holes_properties,
                 &sink_properties, &neutrino_properties, &neutrino_response,
-                &feedback_properties, &pressure_floor_props, &rt_properties,
+                &feedback_properties, &turbulent_driving_properties,
+                &pressure_floor_props, &rt_properties,
                 &mesh, &pow_data, &potential, &forcing_terms, &cooling_func,
                 &starform, &chemistry, &extra_io_props, &fof_properties,
                 &los_properties, &lightcone_array_properties, &ics_metadata);
