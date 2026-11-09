@@ -52,6 +52,12 @@
 #include "timestep.h"
 #include "turbulent_driving.h"
 
+#include <pthread.h>
+#include <stdio.h>
+
+/* Serialises writes to the trigger log across runner threads. */
+static pthread_mutex_t turbulent_driving_log_lock = PTHREAD_MUTEX_INITIALIZER;
+
 /**
  * @brief Decide which gas particles trigger a turbulent driving injection
  * event this step.
@@ -89,6 +95,8 @@ void runner_do_turbulent_driving_trigger(struct runner *r, struct cell *c,
   const int with_cosmology = (e->policy & engine_policy_cosmology);
   const double time_base = e->time_base;
   const integertime_t ti_current = e->ti_current;
+   /* Current simulation time (or scale factor-derived time if cosmological). */
+  const double time_now = with_cosmology ? cosmo->time : e->time;
 
   struct part *restrict parts = c->hydro.parts;
   struct xpart *restrict xparts = c->hydro.xparts;
@@ -120,9 +128,17 @@ void runner_do_turbulent_driving_trigger(struct runner *r, struct cell *c,
     
 
     if (turbulent_driving_should_trigger(p, props, e, dt)) {
-      message("TURBULENT_DRIVING: triggered");
       xp->turbulent_driving_data.triggered = 1;
       xp->turbulent_driving_data.ngb_count = 0;
+
+      pthread_mutex_lock(&turbulent_driving_log_lock);
+      FILE *fp = fopen("turbulent_driving_triggers.txt", "a");
+      if (fp != NULL) {
+        fprintf(fp, "%lld\t%e\t%lld\n", (long long)e->step, time_now,
+                (long long)p->id);
+        fclose(fp);
+      }
+      pthread_mutex_unlock(&turbulent_driving_log_lock);
     } else {
       xp->turbulent_driving_data.triggered = 0;
     }
