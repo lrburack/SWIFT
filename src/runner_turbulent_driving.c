@@ -106,7 +106,6 @@ void runner_do_turbulent_driving_trigger(struct runner *r, struct cell *c,
       xp->turbulent_driving_data.triggered = 0;
       continue;
     }
-    message("TURBULENT_DRIVING: eligable");
 
     /* Time-step size for this particle, in internal units. */
     double dt;
