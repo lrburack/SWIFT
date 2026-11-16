@@ -585,6 +585,9 @@ struct stellar_model {
   /*! Use a discrete yields approach */
   char discrete_yields;
 
+  /*! Log supernovae */
+  char log_SN;
+
   /*! Filename of the yields table */
   char yields_table[FILENAME_BUFFER_SIZE];
 

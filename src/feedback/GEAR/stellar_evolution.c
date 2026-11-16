@@ -41,6 +41,12 @@
 #include <math.h>
 #include <stddef.h>
 
+#include <pthread.h>
+#include <stdio.h>
+
+/* Serialises writes to the SN log across runner threads. */
+static pthread_mutex_t SN_log_lock = PTHREAD_MUTEX_INITIALIZER;
+
 #define DEFAULT_STAR_MINIMAL_GRAVITY_MASS_MSUN 1e-1
 
 /**
@@ -73,6 +79,10 @@ void stellar_evolution_props_init(struct stellar_model *sm,
   /* Use the discrete yields approach? */
   sm->discrete_yields =
       parser_get_param_int(params, "GEARFeedback:discrete_yields");
+
+  /* Log supernovae? */
+  sm->log_SN =
+      parser_get_opt_param_int(params, "GEARFeedback:log_SN", 0);
 
   /* Initialize the initial mass function */
   initial_mass_function_init(&sm->imf, phys_const, us, params,
@@ -1100,6 +1110,20 @@ void stellar_evolution_compute_SN_feedback_individual_star(
       energy_conversion;
   sp->feedback_data.supernovae.energy_ejected +=
       sp->feedback_data.number_snii * snii_energy;
+
+  // Added SN logging here
+  if (sm->log_SN) {
+    const float density = feedback_get_comoving_gas_density_at_star(sp);
+
+    FILE *fptr = fopen("SN_log.txt", "a");
+    if (fptr != NULL) {
+      fprintf(fptr, "%lld\t%e\t%lld\t%s\t%d\t%d\t%e\t%e\t%e\n",
+              (long long)ti_begin, time, (long long)sp->id, "individual",
+              (int)number_snia, (int)number_snii,
+              (double)snia_energy, (double)snii_energy, (double)density);
+    }
+    fclose(fptr);
+  }
 }
 
 /**
@@ -1304,6 +1328,20 @@ void stellar_evolution_compute_SN_feedback_spart(
       energy_conversion;
   sp->feedback_data.supernovae.energy_ejected +=
       sp->feedback_data.number_snii * snii_energy;
+
+  // Added SN logging here
+  if (sm->log_SN) {
+    const float density = feedback_get_comoving_gas_density_at_star(sp);
+
+    FILE *fptr = fopen("SN_log.txt", "a");
+    if (fptr != NULL) {
+      fprintf(fptr, "%lld\t%e\t%lld\t%s\t%d\t%d\t%e\t%e\t%e\n",
+              (long long)ti_begin, time, (long long)sp->id, "spart",
+              (int)number_snia, (int)number_snii,
+              (double)snia_energy, (double)snii_energy, (double)density);
+    }
+    fclose(fptr);
+  }
 }
 
 /**
