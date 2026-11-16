@@ -80,6 +80,7 @@ void stellar_evolution_props_init(struct stellar_model *sm,
   sm->discrete_yields =
       parser_get_param_int(params, "GEARFeedback:discrete_yields");
 
+  message("log_SN = %d", sm->log_SN);
   /* Log supernovae? */
   sm->log_SN =
       parser_get_opt_param_int(params, "GEARFeedback:log_SN", 0);
@@ -143,6 +144,7 @@ void stellar_model_print(const struct stellar_model *sm) {
 
   /* Print the type of yields */
   message("Discrete yields? %i", sm->discrete_yields);
+  message("Log SN? %i", sm->log_SN);
 
   /* Print the sub properties */
   initial_mass_function_print(&sm->imf);
@@ -1114,7 +1116,7 @@ void stellar_evolution_compute_SN_feedback_individual_star(
   // Added SN logging here
   if (sm->log_SN) {
     const float density = feedback_get_comoving_gas_density_at_star(sp);
-
+    pthread_mutex_lock(&SN_log_lock);
     FILE *fptr = fopen("SN_log.txt", "a");
     if (fptr != NULL) {
       fprintf(fptr, "%lld\t%e\t%lld\t%s\t%d\t%d\t%e\t%e\t%e\n",
@@ -1123,6 +1125,7 @@ void stellar_evolution_compute_SN_feedback_individual_star(
               (double)snia_energy, (double)snii_energy, (double)density);
     }
     fclose(fptr);
+    pthread_mutex_unlock(&SN_log_lock);
   }
 }
 
@@ -1332,7 +1335,8 @@ void stellar_evolution_compute_SN_feedback_spart(
   // Added SN logging here
   if (sm->log_SN) {
     const float density = feedback_get_comoving_gas_density_at_star(sp);
-
+    
+    pthread_mutex_lock(&SN_log_lock);
     FILE *fptr = fopen("SN_log.txt", "a");
     if (fptr != NULL) {
       fprintf(fptr, "%lld\t%e\t%lld\t%s\t%d\t%d\t%e\t%e\t%e\n",
@@ -1341,6 +1345,7 @@ void stellar_evolution_compute_SN_feedback_spart(
               (double)snia_energy, (double)snii_energy, (double)density);
     }
     fclose(fptr);
+    pthread_mutex_unlock(&SN_log_lock);
   }
 }
 
