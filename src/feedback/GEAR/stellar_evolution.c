@@ -1335,13 +1335,13 @@ void stellar_evolution_compute_SN_feedback_spart(
   // Added SN logging here
   if (sm->log_SN) {
     const float density = feedback_get_comoving_gas_density_at_star(sp);
-    
+
     pthread_mutex_lock(&SN_log_lock);
     FILE *fptr = fopen("SN_log.txt", "a");
     if (fptr != NULL) {
       fprintf(fptr, "%lld\t%e\t%lld\t%s\t%d\t%d\t%e\t%e\t%e\n",
               (long long)ti_begin, time, (long long)sp->id, "spart",
-              (int)number_snia, (int)number_snii,
+              (double)number_snia_f, (double)number_snii_f,
               (double)snia_energy, (double)snii_energy, (double)density);
     }
     fclose(fptr);
