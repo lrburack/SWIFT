@@ -52,8 +52,8 @@ struct star_formation_spart_data {
   /*! The birth temperature */
   float birth_temperature;
 
-  /*! The birth metalicity */
-  float birth_metalicity;
+  /*! The birth metallicity */
+  float birth_metallicity;
 
   /*! The birth mass */
   float birth_mass;
