@@ -415,7 +415,7 @@ INLINE static void star_formation_copy_properties(
 
   star_formation_set_spart_birth_density(sp, birth_density);
   star_formation_set_spart_birth_temperature(sp, birth_temperature);
-  star_formation_set_spart_birth_metallicity(sp, birth_metallicity)
+  star_formation_set_spart_birth_metallicity(sp, birth_metallicity);
   
   /* Copy the progenitor id */
   star_formation_set_spart_progenitor_id(sp, p->id);
