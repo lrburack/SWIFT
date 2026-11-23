@@ -62,6 +62,12 @@ __attribute__((always_inline)) INLINE void star_formation_set_spart_birth_mass(
   sp->sf_data.birth_mass = birth_mass;
 }
 
+__attribute__((always_inline)) INLINE void
+star_formation_set_spart_birth_metallicity(struct spart *restrict sp,
+                                       const float birth_metallicity) {
+  sp->sf_data.birth_metallicity = birth_metallicity;
+}
+
 /**
  * @brief Set the id of the particle creating the star particle.
  *
