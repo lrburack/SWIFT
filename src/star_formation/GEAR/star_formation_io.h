@@ -99,11 +99,16 @@ star_formation_write_sparticles(const struct spart *sparts,
       "BirthMetallicities", FLOAT, 1, UNIT_CONV_NO_UNITS, 0.f, sparts,
       sf_data.birth_metallicity, /*can convert to comoving=*/0,
       "Metallicities at the time of birth of the gas particles that "
-      "turned into stars)");
+      "turned into stars");
 
+  list[5] = io_make_output_field(
+      "BirthCoordinates", DOUBLE, 3, UNIT_CONV_LENGTH, 1.f, sparts,
+      birth_coordinates,
+      "Coordinates of the star particle at the time of birth (comoving).");
+      
 #if defined(CHEMISTRY_GEAR_FVPM_DIFFUSION) || \
     defined(CHEMISTRY_GEAR_FVPM_HYPERBOLIC_DIFFUSION)
-  list[5] = io_make_output_field(
+  list[6] = io_make_output_field(
       "ProgenitorDiffusionMatrixNorms", DOUBLE, 1, UNIT_CONV_MASS_DIFFUSIVITY,
       0.f, sparts, sf_data.norm_matrix_K,
       "Physical diffusion matrix of the progenitor gas particle");

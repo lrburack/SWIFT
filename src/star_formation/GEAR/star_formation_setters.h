@@ -69,6 +69,20 @@ star_formation_set_spart_birth_metallicity(struct spart *restrict sp,
 }
 
 /**
+ * @brief Set the birth coordinates of a star particle.
+ *
+ * @param sp The #spart.
+ * @param birth_coordinates Birth coordinates of the star.
+ */
+__attribute__((always_inline)) INLINE void
+star_formation_set_spart_birth_coordinates(struct spart *restrict sp,
+                                           const double birth_coordinates[3]) {
+  sp->sf_data.birth_coordinates[0] = birth_coordinates[0];
+  sp->sf_data.birth_coordinates[1] = birth_coordinates[1];
+  sp->sf_data.birth_coordinates[2] = birth_coordinates[2];
+}
+
+/**
  * @brief Set the id of the particle creating the star particle.
  *
  * @param sp The #spart.

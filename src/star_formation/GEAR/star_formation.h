@@ -416,6 +416,12 @@ INLINE static void star_formation_copy_properties(
   star_formation_set_spart_birth_density(sp, birth_density);
   star_formation_set_spart_birth_temperature(sp, birth_temperature);
   star_formation_set_spart_birth_metallicity(sp, birth_metallicity);
+  star_formation_set_spart_birth_coordinates(sp, p->x);
+
+  /* Store the birth coordinates */
+  sp->birth_coordinates[0] = p->x[0];
+  sp->birth_coordinates[1] = p->x[1];
+  sp->birth_coordinates[2] = p->x[2];
   
   /* Copy the progenitor id */
   star_formation_set_spart_progenitor_id(sp, p->id);

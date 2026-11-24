@@ -58,6 +58,9 @@ struct star_formation_spart_data {
   /*! The birth mass */
   float birth_mass;
 
+  /*! The birth coordinates */
+  double birth_coordinates[3];
+
   /*! The progenitor ID */
   long long progenitor_id;
 
